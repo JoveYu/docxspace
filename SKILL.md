@@ -9,9 +9,9 @@ Organize structured documentation spaces using directories and Markdown files, t
 
 ## Core Capabilities
 
-1. **Scaffold docxspace**: Initialize build scripts, templates (`reference.docx`), and directory structures in any workspace.
+1. **Scaffold docxspace**: Initialize documentation directory structures and `index.md` files in any workspace (without polluting workspace with scripts or assets).
 2. **Document Authoring & Structuring**: Organize chapters, sections, and metadata using numbered directory hierarchies.
-3. **Build & Convert**: Merge multi-file documents and convert them into `.docx` with table of contents and custom reference styles.
+3. **Build & Convert**: Merge multi-file documents and convert them into `.docx` directly using the skill's built-in script and reference template.
 
 ---
 
@@ -21,9 +21,8 @@ Each top-level directory containing an `index.md` represents an independent docu
 
 ```text
 workspace-root/
-├── build.py             # Build script (copied from skill's scripts/build.py)
-├── reference.docx       # Optional Pandoc Word style template
 ├── image/               # Shared document images
+├── reference.docx       # Optional: workspace-level Pandoc style template (falls back to skill's reference.docx)
 └── <DocumentName>/       # Top-level document directory
     ├── index.md         # Document frontmatter / preface
     ├── 001ChapterName/  # 3-digit prefix for natural ordering
@@ -61,37 +60,35 @@ workspace-root/
 
 ### 1. Initializing in a New Project
 
-When requested to setup `docxspace` or initialize document building in a project:
+**IMPORTANT**: Do **NOT** copy `build.py` or `reference.docx` into the user workspace. The build script is executed directly from the skill directory, and will automatically fall back to using the skill's bundled `reference.docx` when no workspace-level template is present.
 
-1. Copy the build script:
-   Copy `<skill_dir>/scripts/build.py` into the target workspace root as `build.py` (or execute directly from skill without copying).
-2. (Optional) Copy style template:
-   Copy `<skill_dir>/assets/reference.docx` to the target workspace root if customized styling is desired.
-3. (Optional) Scaffold sample document:
-   Copy `<skill_dir>/assets/测试文档` as a reference/starter directory structure.
-4. Create `image/` directory.
-5. Scaffold the target document directory structure with `index.md` files.
+When requested to setup `docxspace` or initialize document structure:
+1. Create `image/` directory if needed.
+2. Scaffold the target document directory structure with `index.md` files (or refer to sample in `<skill_dir>/assets/测试文档`).
+3. (Only if the user explicitly requests custom Word styles) Place a custom `reference.docx` in the workspace root.
 
 ### 2. Building Documents
 
-Run the build script from the workspace root:
+Execute `build.py` directly from the skill directory:
 
 ```bash
-# Auto-discover and build all top-level document directories (.md and .docx)
-python3 build.py
+# Auto-discover and build all top-level document directories (.md and .docx) in the current workspace
+python3 <skill_dir>/scripts/build.py
 
 # Combine Markdown only (does not require Pandoc)
-python3 build.py combine
+python3 <skill_dir>/scripts/build.py combine
 
 # Build a specific document
-python3 build.py <DocumentDirectoryName>
+python3 <skill_dir>/scripts/build.py <DocumentDirectoryName>
 
 # Combine a specific document only
-python3 build.py combine <DocumentDirectoryName>
+python3 <skill_dir>/scripts/build.py combine <DocumentDirectoryName>
 
 # Convert existing combined Markdown to docx
-python3 build.py convert <DocumentDirectoryName>
+python3 <skill_dir>/scripts/build.py convert <DocumentDirectoryName>
 ```
+
+> **Note**: `<skill_dir>` refers to the docxspace skill directory. It automatically discovers documents in and outputs `.md`/`.docx` into the current working directory (workspace root).
 
 **Requirements**:
 - Merging Markdown (`combine`): Python 3 standard library only (no external dependencies).

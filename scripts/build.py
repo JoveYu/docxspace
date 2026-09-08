@@ -8,9 +8,15 @@ import sys
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parent
+SKILL_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_REFERENCE_DOCX = SKILL_DIR / "assets" / "reference.docx"
 INDEX_FILE_NAME = "index.md"
 NUMBERED_DIRECTORY_RE = re.compile(r"^\d{3}(?:[ _.-]*)")
+
+
+def get_working_dir():
+    """获取当前执行上下文的工作目录。"""
+    return Path.cwd().resolve()
 
 
 def title_from_directory(name):
@@ -37,7 +43,7 @@ def child_directories(path):
 
 def discover_documents(root_dir=None):
     """发现根目录下包含 ``index.md`` 的一级文档目录。"""
-    root_dir = Path(ROOT_DIR if root_dir is None else root_dir)
+    root_dir = Path(get_working_dir() if root_dir is None else root_dir)
     return [
         path for path in child_directories(root_dir) if (path / INDEX_FILE_NAME).is_file()
     ]
@@ -68,7 +74,7 @@ def combine_document(source_dir, output_file):
 
 def pandoc_args(markdown_file, docx_file, root_dir=None):
     """构建通用的 Pandoc DOCX 转换参数。"""
-    root_dir = Path(ROOT_DIR if root_dir is None else root_dir)
+    root_dir = Path(get_working_dir() if root_dir is None else root_dir)
     args = [
         "pandoc",
         str(markdown_file),
@@ -81,7 +87,11 @@ def pandoc_args(markdown_file, docx_file, root_dir=None):
         "toc-title:目录",
     ]
 
+    # 优先使用目标目录或工作区下的 reference.docx，不存在时自动回退到 skill 内部自带的 template
     reference_doc = root_dir / "reference.docx"
+    if not reference_doc.is_file() and DEFAULT_REFERENCE_DOCX.is_file():
+        reference_doc = DEFAULT_REFERENCE_DOCX
+
     if reference_doc.is_file():
         args.extend(["--reference-doc", str(reference_doc)])
 
@@ -93,7 +103,7 @@ def pandoc_args(markdown_file, docx_file, root_dir=None):
 
 def convert_document(markdown_file, docx_file, root_dir=None):
     """调用 Pandoc 将合并后的 Markdown 转换为 Word。"""
-    root_dir = Path(ROOT_DIR if root_dir is None else root_dir)
+    root_dir = Path(get_working_dir() if root_dir is None else root_dir)
     markdown_file = Path(markdown_file)
     if not markdown_file.is_file():
         raise ValueError(f"合并文件不存在: {markdown_file.name}，请先执行 combine")
@@ -106,8 +116,9 @@ def convert_document(markdown_file, docx_file, root_dir=None):
 
 def parse_targets(names):
     """解析指定的文档目录；未指定时自动发现。支持目录名、相对路径或绝对路径。"""
+    working_dir = get_working_dir()
     if not names:
-        return discover_documents()
+        return discover_documents(working_dir)
 
     targets = []
     for raw in ",".join(names).split(","):
@@ -116,8 +127,8 @@ def parse_targets(names):
             continue
         path = Path(name)
         if not path.is_absolute():
-            # 优先从 ROOT_DIR 相对解析，如果当前工作目录存在则使用
-            cand = ROOT_DIR / path
+            # 优先从当前工作目录相对解析
+            cand = working_dir / path
             if cand.exists():
                 path = cand
             else:

@@ -14,9 +14,8 @@
 
 ```text
 workspace-root/
-├── build.py             # 构建脚本（来自 scripts/build.py）
-├── reference.docx       # 可选：Pandoc Word 样式模板
 ├── image/               # 公共文档图片
+├── reference.docx       # 可选：自定义 Word 样式模板（默认使用 skill 内部模板）
 └── <文档名称>/          # 顶层文档目录
     ├── index.md         # 文档元数据（标题、作者、日期）及前言
     ├── 001章节名/       # 3 位数字前缀用于排序，自动作为章节标题
@@ -36,19 +35,21 @@ workspace-root/
 
 ### 2. 常用构建命令
 
+无需将 `build.py` 和 `reference.docx` 复制到项目工作区，直接通过 skill 脚本路径调用即可（例如 `~/.claude/skills/docxspace/scripts/build.py` 或 `<skill_dir>/scripts/build.py`）：
+
 ```bash
-# 构建工作区下所有文档（生成合并后的 .md 和 .docx）
-python3 build.py
+# 构建当前工作区下所有文档（生成合并后的 .md 和 .docx）
+python3 ~/.claude/skills/docxspace/scripts/build.py
 
 # 仅合并 Markdown（无需 Pandoc）
-python3 build.py combine
+python3 ~/.claude/skills/docxspace/scripts/build.py combine
 
 # 构建指定文档
-python3 build.py <文档目录名>
+python3 ~/.claude/skills/docxspace/scripts/build.py <文档目录名>
 
 # 仅合并指定文档
-python3 build.py combine <文档目录名>
+python3 ~/.claude/skills/docxspace/scripts/build.py combine <文档目录名>
 
 # 将已合并的 Markdown 转换为 docx
-python3 build.py convert <文档目录名>
+python3 ~/.claude/skills/docxspace/scripts/build.py convert <文档目录名>
 ```
