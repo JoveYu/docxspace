@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docxspace Document Workspace"
+  short_description: "Scaffold, write, and build structured multi-chapter Markdown docs into Word"
+  default_prompt: "帮我初始化一个 docxspace 文档结构并构建 Word 文档"
